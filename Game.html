@@ -1,0 +1,399 @@
+<!-- Game.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS2 Coin Flip - Empire Style</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <i class="fa-solid fa-crown"></i> Games
+        </div>
+        <ul>
+            <li class="active"><i class="fa-solid fa-coins"></i> Coinflip</li>
+            <li onclick="scrollToGames()"><i class="fa-solid fa-gamepad"></i> Coinflip Games</li>
+        </ul>
+        <ul>
+            <li><i class="fa-solid fa-question-circle"></i> Support</li>
+            <li><i class="fa-brands fa-discord"></i> Discord</li>
+        </ul>
+    </nav>
+
+    <main>
+        <header class="header">
+            <div class="logo">CS2 Coin Flip</div>
+            <div class="auth-section">
+                <div class="auth-buttons" id="auth-buttons">
+                    <button id="show-login">Login</button>
+                    <button id="show-register">Register</button>
+                    <a href="/auth/steam"><button>Login with Steam</button></a>
+                </div>
+                <div class="user-info" id="user-info" style="display: none;">
+                    <img id="user-avatar" src="" alt="Avatar">
+                    Welcome, <span id="username-display"></span>
+                    <button id="logout">Logout</button>
+                    <button id="profile">Profile</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="game-container">
+            <h1>CS2 Coin Flip Game</h1>
+            <div class="balance-info">Balance: $<span id="balance">0</span></div>
+            <div id="inventory">
+                <h2>Inventory</h2>
+                <ul id="skins-list"></ul>
+            </div>
+
+            <div id="game-lobby">
+                <h2>Create Game</h2>
+                <select id="bet-type">
+                    <option value="money">Bet Money</option>
+                    <option value="skin">Bet Skin</option>
+                </select>
+                <div id="money-bet">
+                    Bet Amount: $<input type="number" id="bet-amount" value="10" min="1" step="1">
+                </div>
+                <div id="skin-bet" style="display: none;">
+                    Select Skin: <select id="skin-select"></select>
+                </div>
+                <div class="choices">
+                    <button id="create-ct">Create as CT</button>
+                    <button id="create-t">Create as T</button>
+                </div>
+                <h2 id="open-games-section">Open Games</h2>
+                <ul id="game-list"></ul>
+            </div>
+
+            <div id="active-game" style="display: none;">
+                <div class="coin-container">
+                    <div class="coin" id="coin">
+                        <div class="side ct">CT</div>
+                        <div class="side t">T</div>
+                    </div>
+                </div>
+                <p id="result"></p>
+            </div>
+
+            <div class="chat-container">
+                <h3>Player Chat</h3>
+                <div id="chat-messages"></div>
+                <input type="text" id="chat-input" placeholder="Type a message...">
+                <button id="chat-send">Send</button>
+            </div>
+        </div>
+
+        <!-- Login Modal -->
+        <div class="modal" id="login-modal">
+            <div class="modal-content">
+                <span class="close" id="close-login">&times;</span>
+                <h2>Login</h2>
+                <form action="/login" method="post">
+                    <input type="text" name="username" id="login-username" placeholder="Username" required>
+                    <input type="password" name="password" id="login-password" placeholder="Password" required>
+                    <button type="submit">Login</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Register Modal -->
+        <div class="modal" id="register-modal">
+            <div class="modal-content">
+                <span class="close" id="close-register">&times;</span>
+                <h2>Register</h2>
+                <form action="/register" method="post">
+                    <input type="text" name="username" id="register-username" placeholder="Username" required>
+                    <input type="email" name="email" id="register-email" placeholder="Email" required>
+                    <input type="password" name="password" id="register-password" placeholder="Password" required>
+                    <button type="submit">Register</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Profile Modal -->
+        <div class="modal" id="profile-modal">
+            <div class="modal-content">
+                <span class="close" id="close-profile">&times;</span>
+                <h2>User Profile</h2>
+                <p>Username: <span id="profile-username"></span></p>
+                <p>Email: <span id="profile-email"></span></p>
+                <p>Balance: $<span id="profile-balance"></span></p>
+                <h3>Skins</h3>
+                <ul id="profile-skins-list"></ul>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const socket = io();
+        let username = null;
+        let email = '';
+        let balance = 0;
+        let skins = [];
+        let avatar = '';
+
+        const loginModal = document.getElementById('login-modal');
+        const registerModal = document.getElementById('register-modal');
+        const profileModal = document.getElementById('profile-modal');
+        const authButtons = document.getElementById('auth-buttons');
+        const userInfo = document.getElementById('user-info');
+        const usernameDisplay = document.getElementById('username-display');
+        const userAvatar = document.getElementById('user-avatar');
+        const balanceEl = document.getElementById('balance');
+        const skinsList = document.getElementById('skins-list');
+        const betType = document.getElementById('bet-type');
+        const moneyBet = document.getElementById('money-bet');
+        const skinBet = document.getElementById('skin-bet');
+        const skinSelect = document.getElementById('skin-select');
+        const gameList = document.getElementById('game-list');
+        const gameLobby = document.getElementById('game-lobby');
+        const activeGame = document.getElementById('active-game');
+        const coin = document.getElementById('coin');
+        const resultPara = document.getElementById('result');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const chatSend = document.getElementById('chat-send');
+        const profileUsername = document.getElementById('profile-username');
+        const profileEmail = document.getElementById('profile-email');
+        const profileBalance = document.getElementById('profile-balance');
+        const profileSkinsList = document.getElementById('profile-skins-list');
+
+        // Modal handlers
+        document.getElementById('show-login').onclick = () => loginModal.style.display = 'flex';
+        document.getElementById('show-register').onclick = () => registerModal.style.display = 'flex';
+        document.getElementById('close-login').onclick = () => loginModal.style.display = 'none';
+        document.getElementById('close-register').onclick = () => registerModal.style.display = 'none';
+        document.getElementById('close-profile').onclick = () => profileModal.style.display = 'none';
+        document.getElementById('profile').onclick = () => {
+            profileUsername.textContent = username;
+            profileEmail.textContent = email;
+            profileBalance.textContent = balance;
+            profileSkinsList.innerHTML = '';
+            skins.forEach(skin => {
+                const li = document.createElement('li');
+                const img = document.createElement('img');
+                img.src = skin.image || 'placeholder.png';
+                img.alt = skin.name;
+                li.appendChild(img);
+                li.appendChild(document.createTextNode(` ${skin.name} ($${skin.value})`));
+                profileSkinsList.appendChild(li);
+            });
+            profileModal.style.display = 'flex';
+        };
+
+        document.getElementById('logout').onclick = () => {
+            location.href = '/logout';
+        };
+
+        window.onclick = (e) => {
+            if (e.target === loginModal) loginModal.style.display = 'none';
+            if (e.target === registerModal) registerModal.style.display = 'none';
+            if (e.target === profileModal) profileModal.style.display = 'none';
+        };
+
+        // Chat send
+        chatSend.onclick = () => {
+            const msg = chatInput.value.trim();
+            if (msg && username) {
+                socket.emit('chat_message', { message: msg });
+                chatInput.value = '';
+            }
+        };
+
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') chatSend.click();
+        });
+
+        // Socket events
+        socket.on('auth_success', (data) => {
+            username = data.username;
+            email = data.email || '';
+            balance = data.balance;
+            skins = data.skins;
+            avatar = data.avatar || 'placeholder-avatar.png'; // Fallback if no avatar
+            authButtons.style.display = 'none';
+            userInfo.style.display = 'flex';
+            usernameDisplay.textContent = username;
+            userAvatar.src = avatar;
+            balanceEl.textContent = balance;
+            updateSkinsList();
+            socket.emit('get_game_list');
+        });
+
+        socket.on('auth_error', (msg) => {
+            alert(msg);
+        });
+
+        socket.on('update_balance_skins', (data) => {
+            balance = data.balance;
+            skins = data.skins;
+            balanceEl.textContent = balance;
+            updateSkinsList();
+        });
+
+        socket.on('join_error', (msg) => {
+            alert(msg);
+        });
+
+        socket.on('chat_message', (data) => {
+            const div = document.createElement('div');
+            div.textContent = `${data.username}: ${data.message}`;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+
+        socket.on('game_list_update', (openGames) => {
+            gameList.innerHTML = '';
+            if (openGames.length === 0) {
+                const li = document.createElement('li');
+                li.className = 'empty-list';
+                li.textContent = 'No open games';
+                gameList.appendChild(li);
+            } else {
+                openGames.forEach(game => {
+                    const li = document.createElement('li');
+                    const betDisplay = game.player1.isSkin ? `${game.player1.bet.name} ($${game.player1.bet.value})` : `$${game.player1.bet}`;
+                    li.textContent = `${game.player1.user} bets ${betDisplay} on ${game.player1.choice.toUpperCase()}`;
+                    const opposite = game.player1.choice === 'ct' ? 't' : 'ct';
+                    const joinButton = document.createElement('button');
+                    joinButton.textContent = `Join as ${opposite.toUpperCase()}`;
+                    joinButton.onclick = () => joinGame(game.gameId, opposite);
+                    li.appendChild(joinButton);
+                    gameList.appendChild(li);
+                });
+            }
+        });
+
+        socket.on('game_created', (data) => {
+            alert(`Game created with ID: ${data.gameId}`);
+            socket.emit('get_game_list');
+        });
+
+        socket.on('game_started', (game) => {
+            gameLobby.style.display = 'none';
+            activeGame.style.display = 'block';
+            animateFlip();
+        });
+
+        socket.on('game_result', (game) => {
+            const result = game.result.toUpperCase();
+            resultPara.textContent = `Result: ${result}`;
+            if ((game.player1.user === username && game.player1.choice === game.result) || (game.player2.user === username && game.player2.choice === game.result)) {
+                resultPara.textContent += ' - You Win!';
+                resultPara.classList.add('win');
+            } else {
+                resultPara.textContent += ' - You Lose!';
+                resultPara.classList.add('lose');
+            }
+            setTimeout(() => {
+                gameLobby.style.display = 'block';
+                activeGame.style.display = 'none';
+                resultPara.textContent = '';
+                resultPara.className = '';
+                socket.emit('get_game_list');
+            }, 3000);
+        });
+
+        // Bet type switch
+        betType.addEventListener('change', () => {
+            if (betType.value === 'skin') {
+                moneyBet.style.display = 'none';
+                skinBet.style.display = 'block';
+            } else {
+                moneyBet.style.display = 'block';
+                skinBet.style.display = 'none';
+            }
+        });
+
+        // Create game buttons
+        document.getElementById('create-ct').onclick = () => createGame('ct');
+        document.getElementById('create-t').onclick = () => createGame('t');
+
+        function updateSkinsList() {
+            skinsList.innerHTML = '';
+            skinSelect.innerHTML = '';
+            skins.forEach(skin => {
+                const li = document.createElement('li');
+                const img = document.createElement('img');
+                img.src = skin.image || 'placeholder.png';
+                img.alt = skin.name;
+                img.style.width = '50px';
+                li.appendChild(img);
+                li.appendChild(document.createTextNode(` ${skin.name} ($${skin.value})`));
+                skinsList.appendChild(li);
+
+                const option = document.createElement('option');
+                option.value = JSON.stringify(skin);
+                option.textContent = `${skin.name} ($${skin.value})`;
+                skinSelect.appendChild(option);
+            });
+        }
+
+        function createGame(choice) {
+            const isSkin = betType.value === 'skin';
+            let bet;
+            if (isSkin) {
+                if (skinSelect.value) {
+                    bet = JSON.parse(skinSelect.value);
+                } else {
+                    alert('Select a skin');
+                    return;
+                }
+            } else {
+                bet = parseInt(document.getElementById('bet-amount').value);
+                if (isNaN(bet) || bet <= 0) {
+                    alert('Invalid bet');
+                    return;
+                }
+            }
+            socket.emit('create_game', { choice, bet, isSkin });
+        }
+
+        function joinGame(gameId, choice) {
+            const isSkin = betType.value === 'skin';
+            let bet;
+            if (isSkin) {
+                if (skinSelect.value) {
+                    bet = JSON.parse(skinSelect.value);
+                } else {
+                    alert('Select a skin');
+                    return;
+                }
+            } else {
+                bet = parseInt(document.getElementById('bet-amount').value);
+                if (isNaN(bet) || bet <= 0) {
+                    alert('Invalid bet');
+                    return;
+                }
+            }
+            socket.emit('join_game', { gameId, choice, bet, isSkin });
+        }
+
+        function animateFlip() {
+            document.body.classList.add('blur-background');
+            coin.style.transition = 'none';
+            coin.style.transform = 'rotateY(0deg)';
+            coin.offsetHeight; // reflow
+
+            const numSpins = 5 + Math.floor(Math.random() * 4);
+            coin.style.transition = 'transform 2s cubic-bezier(0.25, 0.1, 0.25, 1)';
+            coin.style.transform = `rotateY(${numSpins * 360}deg)`;
+
+            setTimeout(() => {
+                document.body.classList.remove('blur-background');
+            }, 2000);
+        }
+
+        // Sidebar function to scroll to open games
+        function scrollToGames() {
+            document.getElementById('open-games-section').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

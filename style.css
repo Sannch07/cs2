@@ -1,0 +1,441 @@
+/* style.css (Updated with Sidebar Styles) */
+/* Keep all original styles, remove roulette-specific if not needed, add sidebar */
+
+:root {
+    --primary-purple: #a020f0; /* Purple for accents */
+    --dark-bg: #0a0a0a; /* Dark background */
+    --secondary-dark: #1a1a1a;
+    --ct-purple: #800080; /* Purple for CT side */
+    --t-red: #aa0000; /* Red for T side */
+    --win: #a020f0; /* Purple for win */
+    --lose: #ff0044; /* Red for lose */
+    --bg-gradient: radial-gradient(circle at center, #1a1a1a 0%, #000 70%);
+}
+
+* { 
+    box-sizing: border-box; 
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    height: 100vh;
+    background: var(--bg-gradient);
+    color: #fff;
+    font-family: 'Roboto', sans-serif;
+    display: flex;
+    overflow: hidden;
+    transition: filter 0.5s ease-in-out;
+}
+
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 200px;
+    background: var(--dark-bg);
+    color: #fff;
+    padding: 20px;
+    overflow-y: auto;
+    z-index: 100;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+.sidebar-header {
+    font-weight: bold;
+    color: #0f0; /* Green like in image */
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+}
+
+.sidebar ul {
+    list-style: none;
+}
+
+.sidebar li {
+    padding: 10px;
+    cursor: pointer;
+    color: #aaa;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sidebar li:hover {
+    color: #fff;
+}
+
+.sidebar li.active {
+    color: #fff;
+}
+
+.sidebar .ad {
+    background: linear-gradient(135deg, var(--primary-purple), #ff00ff);
+    padding: 15px;
+    border-radius: 10px;
+    margin: 30px 0;
+    text-align: center;
+    color: #fff;
+    font-size: 0.9rem;
+}
+
+.sidebar .ad button {
+    background: #00ff00;
+    color: #000;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+main {
+    flex: 1;
+    margin-left: 200px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* HEADER */
+.header {
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(to bottom, var(--secondary-dark), transparent);
+    backdrop-filter: blur(10px);
+    z-index: 100;
+}
+
+.logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--primary-purple);
+    text-shadow: 0 0 15px var(--primary-purple);
+}
+
+/* AUTH BUTTONS */
+.auth-buttons button, .user-info button {
+    background: var(--primary-purple);
+    color: #000;
+    border: none;
+    padding: 12px 24px;
+    margin-left: 15px;
+    border-radius: 4px; /* More square like Empire */
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px var(--primary-purple);
+}
+
+.auth-buttons button:hover, .user-info button:hover {
+    transform: scale(1.08) translateY(-2px);
+    box-shadow: 0 0 30px var(--primary-purple);
+    filter: brightness(1.3);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    color: #fff;
+    font-weight: 500;
+}
+
+.user-info img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+/* GAME CONTAINER */
+.game-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    color: var(--primary-purple);
+    text-shadow: 0 0 20px var(--primary-purple);
+    margin-bottom: 10px;
+}
+
+.balance-info,
+.bet-control {
+    margin: 15px 0;
+    font-size: 1.4rem;
+    font-weight: 500;
+}
+
+#bet-amount {
+    width: 100px;
+    padding: 8px;
+    background: var(--secondary-dark);
+    border: 2px solid var(--primary-purple);
+    color: #fff;
+    border-radius: 4px;
+    text-align: center;
+}
+
+/* COIN */
+.coin-container {
+    perspective: 1200px;
+    margin: 30px 0;
+}
+
+.coin {
+    width: clamp(180px, 25vw, 260px);
+    height: clamp(180px, 25vw, 260px);
+    position: relative;
+    transform-style: preserve-3d;
+    margin: 0 auto;
+    cursor: pointer;
+    transition: transform 1s ease;
+}
+
+.side {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(48px, 8vw, 80px);
+    font-weight: 700;
+    color: var(--primary-purple);
+    text-shadow: 0 0 15px #000;
+    backface-visibility: hidden;
+    border: 12px solid var(--primary-purple);
+    box-shadow:
+        0 0 30px rgba(160, 32, 240, 0.6),
+        inset 0 0 40px rgba(0, 0, 0, 0.5);
+}
+
+.side::after {
+    content: '';
+    position: absolute;
+    top: -60%;
+    left: -60%;
+    width: 220%;
+    height: 220%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 25% 25%, rgba(255,255,255,0.35), transparent 40%);
+    pointer-events: none;
+}
+
+.ct {
+    background: linear-gradient(145deg, var(--ct-purple), #400040);
+}
+
+.t {
+    background: linear-gradient(145deg, var(--t-red), #550000);
+    transform: rotateY(180deg);
+}
+
+/* BUTTONS */
+.choices button,
+#flip-button {
+    background: var(--secondary-dark);
+    color: var(--primary-purple);
+    border: 2px solid var(--primary-purple);
+    padding: 14px 32px;
+    margin: 8px;
+    border-radius: 4px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px var(--primary-purple);
+}
+
+.choices button:hover,
+#flip-button:hover:not(:disabled) {
+    transform: scale(1.08) translateY(-3px);
+    box-shadow: 0 0 35px var(--primary-purple);
+    filter: brightness(1.4);
+}
+
+#flip-button:disabled {
+    background: #333;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* RESULT */
+#result {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-top: 25px;
+    min-height: 60px;
+}
+
+.win { 
+    color: var(--win); 
+    text-shadow: 0 0 15px var(--win); 
+}
+
+.lose { 
+    color: var(--lose); 
+    text-shadow: 0 0 15px var(--lose); 
+}
+
+.blur-background { 
+    filter: blur(6px); 
+}
+
+/* MODAL */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(8px);
+}
+
+.modal-content {
+    background: var(--secondary-dark);
+    padding: 40px;
+    border-radius: 16px;
+    border: 3px solid var(--primary-purple);
+    box-shadow: 0 0 50px var(--primary-purple);
+    width: 90%;
+    max-width: 380px;
+    text-align: center;
+}
+
+.modal-content h2 {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--primary-purple);
+    margin-bottom: 25px;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 14px;
+    margin: 12px 0;
+    background: #000;
+    border: 2px solid var(--primary-purple);
+    color: #fff;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.modal-content input:focus {
+    outline: none;
+    border-color: var(--primary-purple);
+    box-shadow: 0 0 15px var(--primary-purple);
+}
+
+.modal-content button {
+    background: var(--primary-purple);
+    color: #000;
+    border: none;
+    padding: 14px 30px;
+    margin-top: 15px;
+    width: 100%;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.modal-content button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px var(--primary-purple);
+}
+
+.close {
+    float: right;
+    font-size: 32px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #aaa;
+}
+
+.close:hover { 
+    color: var(--primary-purple); 
+}
+
+/* For empty game list */
+.empty-list {
+    color: #aaa;
+    font-style: italic;
+}
+
+/* For join buttons */
+#game-list button {
+    background: var(--primary-purple);
+    color: #000;
+    border: none;
+    padding: 8px 16px;
+    margin-left: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#game-list button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px var(--primary-purple);
+}
+
+/* CHAT CONTAINER */
+.chat-container {
+    width: 100%;
+    max-width: 800px;
+    background: var(--secondary-dark);
+    padding: 15px;
+    border-radius: 8px;
+    border: 2px solid var(--primary-purple);
+    box-shadow: 0 0 20px var(--primary-purple);
+    margin-top: 20px;
+}
+
+#chat-messages {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    padding: 10px;
+    background: #000;
+    border-radius: 4px;
+}
+
+#chat-input {
+    width: calc(100% - 80px);
+    padding: 10px;
+    background: #000;
+    border: 2px solid var(--primary-purple);
+    color: #fff;
+    border-radius: 4px;
+}
+
+#chat-send {
+    background: var(--primary-purple);
+    color: #000;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+/* Add your custom CSS here if needed */
+
+#profile-skins-list img {
+    width: 50px;
+    margin-right: 10px;
+}
